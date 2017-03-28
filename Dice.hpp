@@ -1,6 +1,7 @@
 #pragma once
 
 #include <random>
+#include <queue>
 
 class Dice final
 {
@@ -24,8 +25,19 @@ class Dice final
         return distribution(generator);
     }
 
+    std::priority_queue<unsigned int> roll(unsigned int times)
+    {
+        std::priority_queue<unsigned int> rolls;
+
+        for (unsigned int i{0}; i < times; ++i) {
+            rolls.emplace(roll());
+        }
+
+        return rolls;
+    }
+
   private:
-    std::random_device randomDevice;
-    std::mt19937 generator;
+    std::random_device                 randomDevice;
+    std::mt19937                       generator;
     std::uniform_int_distribution<int> distribution;
 };

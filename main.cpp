@@ -1,19 +1,39 @@
 #include "Dice.hpp"
 
 #include <algorithm>
+#include <boost/program_options.hpp>
 #include <iostream>
 #include <list>
+#include <memory>
 #include <set>
 #include <vector>
 
-static constexpr bool printDetail{false};
+static bool verbose{false};
+
+#define LOG(msg) \
+    do { \
+        if (verbose) { \
+            std::cout << msg; \
+        } \
+    } while(false)
 
 enum Unit
 {
-  Peasent,
-  Archer,
-  Infanty,
-  Cavalry
+    Peasent,
+    Archer,
+    Infantry,
+    Cavalry,
+    Siege,
+    UnitMin = Peasent,
+    UnitMax = Siege
+};
+
+enum ArmyType
+{
+    Attacker,
+    Defender,
+    ArmyTypeMin = Attacker,
+    ArmyTypeMax = Defender
 };
 
 enum Result
@@ -27,27 +47,46 @@ inline std::string asString(Unit unit)
 {
     switch (unit) {
         case Peasent:
-            return "Peasent";
+            return "peasent";
         case Archer:
-            return "Archer";
-        case Infanty:
-            return "Infanty";
+            return "archer";
+        case Infantry:
+            return "infantry";
         case Cavalry:
-            return "Cavalry";
+            return "cavalry";
+        case Siege:
+            return "siege";
     }
 }
 
-class UnitDefintion
+inline std::string asString(ArmyType army)
+{
+    switch (army) {
+        case Attacker:
+            return "attacker";
+        case Defender:
+            return "defender";
+    }
+}
+
+class UnitDefinition final
 {
   public:
-    UnitDefintion(Unit _unit,
+    UnitDefinition(Unit _unit,
                   unsigned int _hitsOn,
-                  const std::set<Unit> _counters)
+                  std::set<Unit>&& _counters)
         : unit(_unit)
         , hitsOn(_hitsOn)
-        , counters(_counters)
+        , counters(std::move(_counters))
     {
     }
+
+    UnitDefinition() = delete;
+    ~UnitDefinition() = default;
+    UnitDefinition(const UnitDefinition&) = default;
+    UnitDefinition& operator=(const UnitDefinition&) = delete;
+    UnitDefinition(UnitDefinition&&) = delete;
+    UnitDefinition& operator=(UnitDefinition&&) = delete;
 
     Unit getType()
     {
@@ -61,52 +100,54 @@ class UnitDefintion
 
     bool isCounterOf(Unit _unit)
     {
-        return _unit == Unit::Peasent or counters.find(_unit) != counters.end();
+        return _unit == Peasent or counters.find(_unit) != counters.end();
     }
 
   private:
-    Unit            unit;
-    unsigned int    hitsOn;
+    Unit           unit;
+    unsigned int   hitsOn;
     std::set<Unit> counters;
 };
 
 
-class Army
+class Army final
 {
   public:
-    Army(const std::string _name,
-         const std::list<Unit>& _units)
+    Army(const std::string& _name,
+         std::list<Unit>& _units)
         : name(_name)
         , units(_units)
     {
     }
 
-    unsigned int countHits(UnitDefintion& unitDef, Dice& dice)
+    Army() = delete;
+    ~Army() = default;
+    Army(const Army&) = default;
+    Army& operator=(const Army&) = delete;
+    Army(Army&&) = delete;
+    Army& operator=(Army&&) = delete;
+
+    unsigned int countHits(UnitDefinition& unitRolling, Dice& dice)
     {
         unsigned int hits{0};
-        unsigned int rolls = count(unitDef.getType());
+        unsigned int rolls = count(unitRolling.getType());
 
         if (rolls > 0) {
-            if (printDetail) {
-                std::cout << "\t\t\t" << name << " rolled ";
-            }
+            LOG("\t\t\t" << name << " rolled ");
 
             for (unsigned int roll{0} ; roll < rolls ; ++roll) {
                 unsigned int value{dice.roll()};
-            
-                if (printDetail) {
-                    std::cout << value << ( roll + 1 == rolls ? "": ",");
-                }
 
-                if (value >= unitDef.doesHitOn()) {
+                LOG(value << ( roll + 1 == rolls ? "": ","));
+
+                if (value >= unitRolling.doesHitOn()) {
                     ++hits;
                 }
             }
-            
-            if (printDetail) {
-                std::cout << std::endl;
-            }
+
+            LOG(std::endl);
         }
+
         return hits;
     }
 
@@ -115,37 +156,66 @@ class Army
         return std::count(units.begin(), units.end(), unit);
     }
 
-    void takeHits(UnitDefintion& unitDef, unsigned int hits)
+    unsigned int size()
     {
+        return units.size();
+    }
+
+    void takeHits(UnitDefinition& attackingUnit, unsigned int hits)
+    {
+        // hits always target counters first
         for (auto unit = units.begin(); unit != units.end();) {
             if (hits == 0) {
                 break;
             }
 
-            if (unitDef.isCounterOf(*unit)) {
-                if (printDetail) {
-                    std::cout << "\t\t\t" << name << " looses "
-                        << asString(*unit) << " from counter" << std::endl;
-                }
+            if (attackingUnit.isCounterOf(*unit)) {
+                LOG("\t\t\t" << name << " looses "
+                    << asString(*unit) << " from counter "
+                    << asString(attackingUnit.getType()) << std::endl);
                 unit = units.erase(unit);
                 --hits;
             } else {
                 ++unit;
             }
         }
-        
+
+        // then they target other units based on ordering
         for (auto unit = units.begin(); unit != units.end();) {
             if (hits == 0) {
                 break;
             }
 
-            if (printDetail) {
-                std::cout << "\t\t\t" << name << " looses "
-                    << asString(*unit) << std::endl;
-            }
+            LOG("\t\t\t" << name << " looses "
+                << asString(*unit) << " from non-counter "
+                << asString(attackingUnit.getType()) << std::endl);
 
             unit = units.erase(unit);
             --hits;
+        }
+
+        if (hits != 0) {
+            LOG("\t\t\t" << name << " " << hits << " unused hits" << std::endl);
+        }
+    }
+
+    void takeHits(unsigned int hits = 1)
+    {
+        for (auto unit = units.begin(); unit != units.end();) {
+            if (hits == 0) {
+                break;
+            }
+
+            LOG("\t\t\t" << name << " looses "
+                << asString(*unit) << " from general roll "
+                << std::endl);
+
+            unit = units.erase(unit);
+            --hits;
+        }
+
+        if (hits != 0) {
+            LOG("\t\t\t" << name << " " << hits << " unused hits" << std::endl);
         }
     }
 
@@ -160,35 +230,37 @@ class Army
 };
 
 
-class Simulation
+class Simulation final
 {
   public:
-    Simulation(const std::vector<UnitDefintion>& _unitDefinitions,
-               const std::list<Unit>& _rankedAttackOrders)
-        : unitDefinitions(_unitDefinitions)
-        , rankedAttackOrders(_rankedAttackOrders)
+    Simulation(std::vector<UnitDefinition>&& _unitDefinitions,
+               std::list<Unit>&& _rankedAttackOrders,
+               bool _generalRoll)
+        : unitDefinitions(std::move(_unitDefinitions))
+        , rankedAttackOrders(std::move(_rankedAttackOrders))
+        , generalRoll(_generalRoll)
     {
     }
 
+    Simulation() = delete;
+    ~Simulation() = default;
+    Simulation(const Simulation&) = delete;
+    Simulation& operator=(const Simulation&) = delete;
+    Simulation(Simulation&&) = delete;
+    Simulation& operator=(Simulation&&) = delete;
+
     Result simulate(Army attacker, Army defender)
     {
-        if (printDetail) {
-            std::cout << std::endl << "Starting Simulation" << std::endl;
-        }
-
-        bool retreat{false};
+        LOG(std::endl << "Simulation:" << std::endl);
 
         unsigned int roundNumber{1};
         do {
-            if (printDetail) {
-                std::cout << "\tRound " << roundNumber << std::endl;
-            }
+            LOG("\tRound " << roundNumber << std::endl);
 
             for (auto& rankedAttackOrder : rankedAttackOrders) {
-                if (printDetail) {
-                    std::cout << "\t\tranked attack order "
-                        << asString(rankedAttackOrder) << std::endl;
-                }
+                LOG("\t\tranked attack order "
+                    << asString(rankedAttackOrder) << std::endl);
+
                 auto& unitDef = unitDefinitions[rankedAttackOrder];
                 auto offenseHits = attacker.countHits(unitDef, dice);
                 auto defenseHits = defender.countHits(unitDef, dice);
@@ -200,102 +272,213 @@ class Simulation
                     break;
                 }
             }
+
+            if (generalRoll) {
+                doGeneralRoll(attacker, defender);
+            }
+
             ++roundNumber;
-        } while (not retreat and
-                 not attacker.destroyed() and
-                 not defender.destroyed());
+        } while (not attacker.destroyed() and not defender.destroyed());
 
         if (attacker.destroyed() and defender.destroyed()) {
-            if (printDetail) {
-                std::cout << "\tDraw, both armies destroyed" << std::endl;
-            }
+            LOG("\tDraw, both armies destroyed" << std::endl);
             return Draw;
         } else if (defender.destroyed()) {
-            if (printDetail) {
-                std::cout << "\tAttacker Wins" << std::endl;
-            }
+            LOG("\tAttacker Wins" << std::endl);
             return AttackerWins;
-        } else {
-            if (printDetail) {
-                std::cout << "\tDefense Wins" << std::endl;
-            }
+        } else if (attacker.destroyed()) {
+            LOG("\tDefense Wins" << std::endl);
             return DefenderWins;
+        } else {
+            assert(false);
         }
     }
 
   private:
-    Dice dice;
-    std::vector<UnitDefintion> unitDefinitions;
-    std::list<Unit> rankedAttackOrders;
+    void doGeneralRoll(Army& attacker, Army& defender)
+    {
+        auto attackerDice = std::min(3u, attacker.size());
+        auto defenderDice = std::min(2u, defender.size());
+
+        LOG("\t\tgeneral roll " << attackerDice << "a vs. "
+            << defenderDice <<"d" << std::endl);
+
+        auto attackerRolls = dice.roll(attackerDice);
+        auto defenderRolls = dice.roll(defenderDice);
+
+        while (not attackerRolls.empty() and not defenderRolls.empty()) {
+            LOG("\t\t\tdice rolls were " << attackerRolls.top() << "a vs. "
+                << defenderRolls.top() <<"d" << std::endl);
+
+            if (attackerRolls.top() > defenderRolls.top()) {
+                defender.takeHits();
+            } else {
+                attacker.takeHits();
+            }
+
+            attackerRolls.pop();
+            defenderRolls.pop();
+        }
+    }
+
+  private:
+    Dice                        dice;
+    std::vector<UnitDefinition> unitDefinitions;
+    std::list<Unit>             rankedAttackOrders;
+    bool                        generalRoll;
 };
 
 
-int main()
+class ProgramOptions
+    : public boost::program_options::options_description
 {
-    Simulation simulation{
-        {
-            {Peasent, 6, {}},
-            {Archer, 4, {Infanty}},
-            {Cavalry, 2, {Archer}},
-            {Infanty, 3, {Cavalry}}
-        },
-        {
-            Unit::Archer,
-            Unit::Cavalry,
-            Unit::Infanty,
-            Unit::Peasent
+  public:
+    ProgramOptions()
+        : boost::program_options::options_description("valid options")
+    {
+        add_options()
+            ("num-simulations", boost::program_options::value<unsigned int>(
+                &numSimulations)->default_value(100),
+                "sets the number of simulations to run")
+            ("general-roll", boost::program_options::value<bool>(
+                &generalRoll)->default_value(false),
+                "turns on the general roll")
+            ("risk-europe", boost::program_options::value<bool>(
+                &riskEurope)->default_value(false),
+                "sets up the simulator to run for risk europe")
+            ("verbose", boost::program_options::value<bool>(
+                &verbose)->default_value(false),
+                "turns on verbose loggging")
+            ;
+
+        for (int a{ArmyTypeMin}; a <= ArmyTypeMax; ++a) {
+            ArmyType army = static_cast<ArmyType>(a);
+            for (int u{UnitMin}; u <= UnitMax; ++u) {
+                Unit unit = static_cast<Unit>(u);
+
+                std::string option{asString(army) + "-" + asString(unit)};
+                add_options()
+                    (option.c_str(), boost::program_options::value<unsigned int>(
+                        &armyUnitCounts[army][unit])->default_value(0),
+                        "sets the specified unit count");
+            }
         }
-    };
+    }
 
-    Army attacker("Attacker", {Peasent,
-                               Peasent,
-                               Peasent,
-                               Peasent,
-                               Peasent,
-                               Peasent,
-                               Peasent,
-                               Peasent,
-                               Peasent,
-                               Peasent,
-                               Peasent,
-                               Peasent,
-                               Cavalry,
-                               Cavalry,
-                               Infanty,
-                               Infanty,
-                               Infanty,
-                               Infanty,
-                               Infanty,
-                               Infanty
-                              });
-    Army defender("Defender", {Peasent,
-                               Archer,
-                               Archer,
-                               Archer,
-                               Cavalry,
-                               Cavalry,
-                               Cavalry,
-                               Cavalry,
-                               Cavalry,
-                               Cavalry,
-                               Cavalry,
-                               Cavalry,
-                               Cavalry,
-                               Cavalry,
-                               Cavalry,
-                               Cavalry
-                              });
+    bool parseArgs(int argc, char** argv)
+    {
+        try {
+            boost::program_options::variables_map vm;
 
-    unsigned int numSimulations{100000};
+            assert(argv != nullptr);
+            assert(argv[0] != nullptr);
+
+            boost::program_options::store(
+            boost::program_options::parse_command_line(argc, argv, *this), vm);
+            boost::program_options::notify(vm);
+        } catch (...) {
+            std::cerr << "Error parsing command line options, "
+                << *this << std::endl;
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
+    }
+
+    void populateArmy(std::list<Unit>& units, ArmyType army)
+    {
+        for (int u{UnitMin}; u <= UnitMax; ++u) {
+            Unit unit = static_cast<Unit>(u);
+            for (auto c = 0; c < armyUnitCounts[army][unit]; ++c) {
+                units.push_back(unit);
+            }
+        }
+    }
+
+    unsigned int numSimulations{1};
+    bool         generalRoll{false};
+    bool         riskEurope{false};
+
+  private:
+    unsigned int armyUnitCounts[ArmyTypeMax + 1][UnitMax + 1] = {};
+};
+
+
+// TODO siege need two dice.
+#define RISK_EUROPE \
+        { \
+            {Peasent, 7, {}}, \
+            {Archer, 5, {}}, \
+            {Infantry, 7, {}}, \
+            {Cavalry, 3, {}}, \
+            {Siege, 3, {}} \
+        }, \
+        { \
+            Siege, \
+            Archer, \
+            Cavalry, \
+        }, true
+
+
+#define SIMULATOR_ARGS \
+        { \
+            {Peasent, 6, {}}, \
+            {Archer, 4, {Infantry}}, \
+            {Infantry, 3, {Cavalry}}, \
+            {Cavalry, 2, {Archer}}, \
+            {Siege, 2, {Archer}} \
+        }, \
+        { \
+            Siege, \
+            Archer, \
+            Cavalry, \
+            Infantry, \
+            Peasent \
+        }
+
+
+inline void runSimulations(Army& attacker,
+                           Army& defender,
+                           Simulation& simulation,
+                           unsigned int numSimulations)
+{
     unsigned int results[3] = {};
     for (unsigned int sim{0}; sim < numSimulations; ++sim) {
         ++results[simulation.simulate(attacker, defender)];
     }
-    
-    std::cout << "After " << numSimulations << " simulations:" << std::endl;
-    std::cout << "\there were " << results[Draw] << " draws" << std::endl;
-    std::cout << "\there were " << results[AttackerWins] << " attacker victories" << std::endl;
-    std::cout << "\there were " << results[DefenderWins] << " defender victories" << std::endl;
 
-    return 0;
+    std::cout << "After " << numSimulations
+        << " simulations:" << std::endl;
+    std::cout << "\tthere were " << results[Draw] << " draws" << std::endl;
+    std::cout << "\tthere were " << results[AttackerWins]
+        << " attacker victories" << std::endl;
+    std::cout << "\tthere were " << results[DefenderWins]
+        << " defender victories" << std::endl;
+}
+
+
+int main(int argc, char** argv)
+{
+    ProgramOptions opts;
+    if (opts.parseArgs(argc, argv) != EXIT_SUCCESS) {
+        return EXIT_FAILURE;
+    }
+
+    std::list<Unit> attackersUnits;
+    std::list<Unit> defendersUnits;
+
+    opts.populateArmy(attackersUnits, Attacker);
+    opts.populateArmy(defendersUnits, Defender);
+
+    Army attacker("Attacker", {attackersUnits});
+    Army defender("Defender", {defendersUnits});
+
+    if (opts.riskEurope) {
+        Simulation simulation{RISK_EUROPE};
+        runSimulations(attacker, defender, simulation, opts.numSimulations);
+    } else {
+        Simulation simulation{SIMULATOR_ARGS, opts.generalRoll};
+        runSimulations(attacker, defender, simulation, opts.numSimulations);
+    }
+
+    return EXIT_SUCCESS;
 }
