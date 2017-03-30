@@ -30,14 +30,9 @@ ProgramOptions::ProgramOptions()
 
             std::string armyName{asString(army)};
             std::string unitName{asString(unit)};
-            std::string dash{"-"};
-            std::string longOption{armyName + dash + unitName};
-            std::string shortOption{armyName[0] + dash + unitName[0]};
+            std::string longOption{armyName + "-" + unitName};
             add_options()
                 (longOption.c_str(), boost::program_options::value<unsigned int>(
-                    &armyUnitCounts[army][unit])->default_value(0),
-                    "sets the specified unit count")
-                (shortOption.c_str(), boost::program_options::value<unsigned int>(
                     &armyUnitCounts[army][unit])->default_value(0),
                     "sets the specified unit count");
         }
@@ -67,7 +62,7 @@ ProgramOptions::parseArgs(int argc, char** argv)
 Army
 ProgramOptions::generateArmy(ArmyType army)
 {
-    LOG("Generating army" << asString(army) << std::endl);
+    LOG("Generating army " << asString(army) << std::endl);
     std::list<Unit> units;
     for (int u{UnitMin}; u <= UnitMax; ++u) {
         Unit unit = static_cast<Unit>(u);

@@ -32,7 +32,7 @@ inline std::string asString(Unit unit)
         case Cavalry:
             return "cavalry";
         case Pikemen:
-            return "Pikemen";
+            return "pikemen";
         case Siege:
             return "siege";
         default:

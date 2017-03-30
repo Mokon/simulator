@@ -56,9 +56,7 @@ Army::size() const
 void
 Army::takeHits(const UnitDefinition& attackingUnit, unsigned int hits)
 {
-            LOG(__LINE__ <<std::endl;);
     if (attackingUnit.hasUnitsItCounters()) {
-            LOG(__LINE__ <<std::endl;);
         takeHits(hits,
                  "counter " + asString(attackingUnit.getType()),
                  [&attackingUnit](Unit unit) {
@@ -66,12 +64,10 @@ Army::takeHits(const UnitDefinition& attackingUnit, unsigned int hits)
                  });
     }
 
-            LOG(__LINE__ <<std::endl;);
     takeHits(hits,
              "non-counter " + asString(attackingUnit.getType()),
              [](Unit) { return true; });
 
-            LOG(__LINE__ <<std::endl;);
     if (hits != 0) {
         LOG("\t\t\t" << asString(type) << " " << hits
             << " unused hits" << std::endl);
@@ -110,20 +106,16 @@ Army::takeHits(unsigned int& hits,
                std::string source,
                std::function<bool(Unit)> condition)
 {
-            LOG(__LINE__ <<std::endl;);
     for (auto unit = units.begin(); unit != units.end();) {
-            LOG(__LINE__ <<std::endl;);
         if (hits == 0) {
             break;
         }
 
-            LOG(__LINE__ <<std::endl;);
         if (condition(*unit)) {
             LOG("\t\t\t" << asString(type) << " looses "
                 << asString(*unit) << " from " << source << std::endl);
             unit = units.erase(unit);
             --hits;
-            LOG(__LINE__ <<std::endl;);
         } else {
             ++unit;
         }

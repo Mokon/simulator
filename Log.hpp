@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-static bool verbose{false}; // TODO fix this
+extern bool verbose;
 
 #define LOG(msg) \
     do { \
@@ -12,3 +12,6 @@ static bool verbose{false}; // TODO fix this
             std::cout << msg; \
         } \
     } while(false)
+
+#define FLAGLOG() \
+    LOG(__FILE__ << ": " << __FUNCTION__ << " " << __LINE__ <<std::endl);
