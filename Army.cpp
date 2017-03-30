@@ -18,7 +18,7 @@ Army::rollDiceAndCountHits(const UnitDefinition& unitRolling,
                            const Dice& dice) const
 {
     unsigned int hits{0};
-    unsigned int rolls = count(unitRolling.getType()) * unitRolling.getRolls();
+    long rolls = count(unitRolling.getType()) * unitRolling.getRolls();
 
     if (rolls > 0) {
         LOG("\t\t\t" << asString(type) << " rolled ");
@@ -39,18 +39,28 @@ Army::rollDiceAndCountHits(const UnitDefinition& unitRolling,
     return hits;
 }
 
-unsigned int
+long
 Army::count(Unit unit) const
 {
-    return static_cast<unsigned int>(std::count(units.begin(),
-                                                units.end(),
-                                                unit));
+    return std::count(units.begin(), units.end(), unit);
 }
 
 unsigned long
 Army::size() const
 {
     return units.size();
+}
+
+bool
+Army::destroyed() const
+{
+    return units.empty();
+}
+
+ArmyType
+Army::getType() const
+{
+    return type;
 }
 
 void
@@ -85,16 +95,10 @@ Army::takeHits(unsigned int hits)
     }
 }
 
-bool
-Army::destroyed() const
-{
-    return units.empty();
-}
-
 std::array<unsigned int, UnitMax + 1>
 Army::summary() const
 {
-    std::array<unsigned int, UnitMax + 1> unitCounts;
+    std::array<unsigned int, UnitMax + 1> unitCounts{};
     for (Unit unit : units) {
         ++unitCounts[unit];
     }

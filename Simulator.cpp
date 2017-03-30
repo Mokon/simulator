@@ -52,13 +52,13 @@ Simulator::simulate(Army attacker, Army defender) const
 
     if (attacker.destroyed() and defender.destroyed()) {
         LOG("\tDraw, both armies destroyed" << std::endl);
-        return Draw;
+        return Result(roundNumber);
     } else if (defender.destroyed()) {
         LOG("\tAttacker Wins" << std::endl);
-        return AttackerWins;
+        return Result(roundNumber, &attacker);
     } else if (attacker.destroyed()) {
         LOG("\tDefense Wins" << std::endl);
-        return DefenderWins;
+        return Result(roundNumber, &defender);
     } else {
         assert(false);
     }

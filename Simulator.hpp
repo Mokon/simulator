@@ -4,17 +4,11 @@
 
 #include "Army.hpp"
 #include "Dice.hpp"
+#include "Result.hpp"
 #include "Unit.hpp"
 
 #include <list>
 #include <map>
-
-enum Result
-{
-    AttackerWins,
-    DefenderWins,
-    Draw
-};
 
 class Simulator final
 {

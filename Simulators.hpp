@@ -30,12 +30,14 @@ class Simulators final
     void runSimulations(Army& attacker,
                         Army& defender,
                         SimulatorType& type,
-                        unsigned int numSimulations);
+                        unsigned int numSimulations,
+                        bool showStats);
 
     void runSimulations(Army& attacker,
                         Army& defender,
                         Simulator& simulation,
-                        unsigned int numSimulations);
+                        unsigned int numSimulations,
+                        bool showStats);
 
   private:
     Simulator                  risk;

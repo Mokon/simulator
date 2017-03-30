@@ -21,6 +21,9 @@ ProgramOptions::ProgramOptions()
         ("verbose", boost::program_options::value<bool>(
             &verbose)->default_value(verbose),
             "turns on verbose loggging")
+        ("stats", boost::program_options::value<bool>(
+            &showStats)->default_value(verbose),
+            "turns on detail stats")
         ;
 
     for (int a{ArmyTypeMin}; a <= ArmyTypeMax; ++a) {

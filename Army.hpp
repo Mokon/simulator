@@ -46,11 +46,13 @@ class Army final
     unsigned int rollDiceAndCountHits(const UnitDefinition& unitRolling,
                                       const Dice& dice) const;
 
-    unsigned int count(Unit unit) const;
+    long count(Unit unit) const;
 
     unsigned long size() const;
     
     bool destroyed() const;
+
+    ArmyType getType() const;
 
     void takeHits(const UnitDefinition& attackingUnit, unsigned int hits);
 

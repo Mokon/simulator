@@ -26,6 +26,7 @@ class ProgramOptions final
 
   public:
     unsigned int numSimulations{1};
+    bool         showStats{false};
     bool         generalRoll{false};
     bool         riskEurope{false};
     bool         risk{false};

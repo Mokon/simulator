@@ -2,6 +2,8 @@
 
 #include "Simulators.hpp"
 
+#include "Results.hpp"
+
 Simulators::Simulators()
     : risk({
             {Peasent, 7,},
@@ -50,18 +52,21 @@ void
 Simulators::runSimulations(Army& attacker,
                            Army& defender,
                            SimulatorType& type,
-                           unsigned int numSimulations)
+                           unsigned int numSimulations,
+                           bool showStats)
 {
     switch(type) {
         case Risk:
-            runSimulations(attacker, defender, risk, numSimulations);
+            runSimulations(attacker, defender, risk, numSimulations, showStats);
             break;
         case RiskEurope:
-            runSimulations(attacker, defender, riskEurope, numSimulations);
+            runSimulations(attacker, defender, riskEurope, numSimulations,
+                           showStats);
             break;
         case Custom:
             assert (custom != nullptr);
-            runSimulations(attacker, defender, *custom, numSimulations);
+            runSimulations(attacker, defender, *custom, numSimulations,
+                           showStats);
             break;
     }
 }
@@ -70,19 +75,13 @@ void
 Simulators::runSimulations(Army& attacker,
                            Army& defender,
                            Simulator& simulation,
-                           unsigned int numSimulations)
+                           unsigned int numSimulations,
+                           bool showStats)
 {
-    unsigned int results[3] = {};
+    Results results;
     for (unsigned int sim{0}; sim < numSimulations; ++sim) {
-        ++results[simulation.simulate(attacker, defender)];
+        results.add(simulation.simulate(attacker, defender));
     }
 
-    // TODO compute stats
-    std::cout << "After " << numSimulations
-        << " simulations:" << std::endl;
-    std::cout << "\tthere were " << results[Draw] << " draws" << std::endl;
-    std::cout << "\tthere were " << results[AttackerWins]
-        << " attacker victories" << std::endl;
-    std::cout << "\tthere were " << results[DefenderWins]
-        << " defender victories" << std::endl;
+    std::cout << results.summary(showStats);
 }

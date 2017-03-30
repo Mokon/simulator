@@ -26,6 +26,7 @@ int main(int argc, char** argv)
     simulators.runSimulations(attacker,
                               defender,
                               type,
-                              opts.numSimulations);
+                              opts.numSimulations,
+                              opts.showStats);
     return EXIT_SUCCESS;
 }
