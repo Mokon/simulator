@@ -1,3 +1,5 @@
+/* Copyright (C) 2017 David 'Mokon' Bond, All Rights Reserved */
+
 #pragma once
 
 #include <random>
@@ -6,13 +8,7 @@
 class Dice final
 {
   public:
-    Dice(unsigned int sides = 6,
-         unsigned int start = 1)
-        : randomDevice()
-        , generator(randomDevice())
-        , distribution(start, start + sides - 1)
-    {
-    }
+    Dice(unsigned int sides = 6, unsigned int start = 1);
 
     ~Dice() = default;
     Dice(const Dice&) = delete;
@@ -20,24 +16,12 @@ class Dice final
     Dice(Dice&&) = delete;
     Dice& operator=(Dice&&) = delete;
 
-    unsigned int roll()
-    {
-        return distribution(generator);
-    }
+    unsigned int roll() const;
 
-    std::priority_queue<unsigned int> roll(unsigned int times)
-    {
-        std::priority_queue<unsigned int> rolls;
-
-        for (unsigned int i{0}; i < times; ++i) {
-            rolls.emplace(roll());
-        }
-
-        return rolls;
-    }
+    std::priority_queue<unsigned int> roll(unsigned long times) const;
 
   private:
-    std::random_device                 randomDevice;
-    std::mt19937                       generator;
-    std::uniform_int_distribution<int> distribution;
+    std::random_device                                  randomDevice;
+    mutable std::mt19937                                generator;
+    mutable std::uniform_int_distribution<unsigned int> distribution;
 };

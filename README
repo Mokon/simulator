@@ -1,0 +1,12 @@
+Welcome to my simulator for various dice rolling scenarios. 
+
+In fedora you will need the following:
+  dnf group install "Development Tools" "C Development Tools and Libraries"
+  dnf install clang
+  dnf install boost-devel
+
+To build type `make`.
+
+To run type `./sim --help`.
+
+No install step is provided.
