@@ -35,7 +35,7 @@ class Simulators final
 
     void runSimulations(Army& attacker,
                         Army& defender,
-                        Simulator& simulation,
+                        Simulator& simulator,
                         unsigned int numSimulations,
                         bool showStats);
 

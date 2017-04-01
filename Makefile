@@ -15,9 +15,15 @@ debug: executable
 release: CXXFLAGS += -g0 -O3 
 release: executable
 executable:
-	clang++ ${CXXFLAGS} ${LDFLAGS} *.cpp -lboost_program_options -o sim 
+	clang++ ${CXXFLAGS} ${LDFLAGS} src/*.cpp -lboost_program_options -o sim 
 install:
 	echo "install not supported"
 clean:
-	/bin/rm -f gmon.out sim
-
+	/bin/rm -f gmon.out sim *.ERR *.bak
+format:
+	perltidy -b *.pm *.pl
+	/bin/rm -f *.pm.bak *.pl.bak
+test: debug
+	./test.pl
+test-release: release
+	./test.pl

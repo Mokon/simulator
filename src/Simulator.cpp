@@ -90,3 +90,9 @@ Simulator::doGeneralRoll(Army& attacker, Army& defender) const
         defenderRolls.pop();
     }
 }
+    
+const std::map<Unit, UnitDefinition>&
+Simulator::getUnitDefinitions() const
+{
+    return unitDefinitions;
+}

@@ -3,6 +3,7 @@
 #include "Army.hpp"
 
 #include "Dice.hpp"
+#include "Simulator.hpp"
 
 #include <algorithm>
 
@@ -124,4 +125,16 @@ Army::takeHits(unsigned int& hits,
             ++unit;
         }
     }
+}
+
+Resources
+Army::getValue(const Simulator& simulator) const
+{
+    return std::accumulate(units.begin(),
+                           units.end(),
+                           Resources(),
+                           [&simulator](Resources sum, Unit unit) {
+                                sum +=simulator.getUnitDefinitions().at(unit).getCost();
+                                return sum;
+                           });
 }

@@ -26,6 +26,8 @@ class Simulator final
 
     Result simulate(Army attacker, Army defender) const;
 
+    const std::map<Unit, UnitDefinition>& getUnitDefinitions() const;
+
   private:
     void doGeneralRoll(Army& attacker, Army& defender) const;
 

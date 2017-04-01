@@ -10,6 +10,7 @@
 #include <list>
 
 class Dice;
+class Simulator;
 
 enum ArmyType
 {
@@ -59,6 +60,8 @@ class Army final
     void takeHits(unsigned int hits);
 
     std::array<unsigned int, UnitMax + 1> summary() const;
+
+    Resources getValue(const Simulator& simulator) const;
 
   private:
     void takeHits(unsigned int& hits,

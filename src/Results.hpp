@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Result.hpp"
+#include "Simulator.hpp"
 
 #include <list>
 
@@ -25,8 +26,13 @@ class Results final
     double mean(Unit unit) const;
 
     double stdev(Unit unit, double& _mean) const;
+    
+    Resources meanValueOfRemaining(Unit unit, const Simulator& simulator) const;
 
-    std::string summary(bool showStats) const;
+    std::string summary(bool showStats,
+                        const Simulator& simulator,
+                        const Resources& attackerInitialValue,
+                        const Resources& defenderInitialValue) const;
 
   private:
     unsigned int sum(Unit unit) const;

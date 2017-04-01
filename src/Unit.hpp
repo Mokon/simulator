@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Resources.hpp"
+
 #include <cassert>
 #include <cstdint>
 #include <set>
@@ -46,13 +48,8 @@ class UnitDefinition final
     UnitDefinition(Unit _unit,
                    unsigned int _hitsOn,
                    std::set<Unit>&& _counters = {},
-                   unsigned int _rolls = 1)
-        : unit(_unit)
-        , hitsOn(_hitsOn)
-        , counters(std::move(_counters))
-        , rolls(_rolls)
-    {
-    }
+                   Resources _cost = {{{0u, 0u, 0u, 0u, 0u}}},
+                   unsigned int _rolls = 1);
 
     UnitDefinition() = delete;
     ~UnitDefinition() = default;
@@ -61,34 +58,22 @@ class UnitDefinition final
     UnitDefinition(UnitDefinition&&) = delete;
     UnitDefinition& operator=(UnitDefinition&&) = delete;
 
-    Unit getType() const
-    {
-        return unit;
-    }
+    Unit getType() const;
 
-    unsigned int doesHitOn() const
-    {
-        return hitsOn;
-    }
+    unsigned int doesHitOn() const;
 
-    bool hasUnitsItCounters() const
-    {
-        return not counters.empty();
-    }
+    bool hasUnitsItCounters() const;
 
-    bool isCounterOf(Unit _unit) const
-    {
-        return counters.find(_unit) != counters.end();
-    }
+    bool isCounterOf(Unit _unit) const;
 
-    unsigned int getRolls() const
-    {
-        return rolls;
-    }
+    unsigned int getRolls() const;
+
+    const Resources& getCost() const;
 
   private:
     Unit           unit;
     unsigned int   hitsOn;
     std::set<Unit> counters;
+    Resources      cost;
     unsigned int   rolls;
 };

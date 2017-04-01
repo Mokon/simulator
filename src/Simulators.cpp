@@ -14,11 +14,11 @@ Simulators::Simulators()
         },
         {}, true)
     , riskEurope({
-            {Peasent, 7,},
-            {Archer, 5},
-            {Infantry, 7},
-            {Cavalry, 3},
-            {Siege, 3, {}, 2}
+            {Peasent,  7, {}, {{{0,  0, 0, 0, 0}}}, 2},
+            {Infantry, 7, {}, {{{1,  0, 0, 0, 0}}}, 2},
+            {Archer,   5, {}, {{{2,  0, 0, 0, 0}}}, 2},
+            {Cavalry,  3, {}, {{{3,  0, 0, 0, 0}}}, 2},
+            {Siege,    3, {}, {{{10, 0, 0, 0, 0}}}, 2}
         },
         {
             Siege,
@@ -37,7 +37,7 @@ Simulators::makeCustomSimulator(bool generalRoll)
             {Archer, 4, {Infantry}},
             {Infantry, 3, {Cavalry}},
             {Cavalry, 2, {Archer}},
-            {Siege, 2, {Archer}, 2}
+            {Siege, 2, {Archer}, {{{0, 0, 0, 0, 0}}}, 2}
         },
         {
             Siege,
@@ -74,14 +74,17 @@ Simulators::runSimulations(Army& attacker,
 void
 Simulators::runSimulations(Army& attacker,
                            Army& defender,
-                           Simulator& simulation,
+                           Simulator& simulator,
                            unsigned int numSimulations,
                            bool showStats)
 {
     Results results;
     for (unsigned int sim{0}; sim < numSimulations; ++sim) {
-        results.add(simulation.simulate(attacker, defender));
+        results.add(simulator.simulate(attacker, defender));
     }
 
-    std::cout << results.summary(showStats);
+    std::cout << results.summary(showStats,
+                                 simulator,
+                                 attacker.getValue(simulator),
+                                 defender.getValue(simulator));
 }
