@@ -1,9 +1,10 @@
+Copyright (C) 2017 David 'Mokon' Bond, All Rights Reserved
+
 Welcome to my simulator for various dice rolling scenarios. 
 
 In fedora you will need the following:
   dnf group install "Development Tools" "C Development Tools and Libraries"
-  dnf install clang
-  dnf install boost-devel
+  dnf install clang boost-devel perl-Switch perl-Term-ANSIColor
 
 To build type `make`.
 

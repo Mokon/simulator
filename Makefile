@@ -1,3 +1,4 @@
+# Copyright (C) 2017 David 'Mokon' Bond, All Rights Reserved
 CXXFLAGS += -Wall -Wextra -std=c++1y -pedantic -Werror -Weffc++
 CXXFLAGS += -Wpedantic -pedantic-errors -Wundef
 CXXFLAGS += -Wshadow -Wstrict-aliasing -Woverloaded-virtual

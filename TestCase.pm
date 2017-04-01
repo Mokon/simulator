@@ -90,6 +90,8 @@ sub run {
 
     if (
         $result =~ /^After\ (?<num_simulations>\d+)\ simulations:\n
+                     \twith\ an\ initial\ attacker\ value\ of\ (?<initial_attacker_value>\d+|n\/a)\n
+                     \twith\ an\ initial\ defender\ value\ of\ (?<initial_defender_value>\d+|n\/a)\n
                      \tthere\ were\ (?<draws>\d+)\ draws\n
                      \tthere\ were\ (?<attacker_wins>\d+)\ attacker\ victories\n
                      \tthere\ were\ (?<defender_wins>\d+)\ defender\ victories\n

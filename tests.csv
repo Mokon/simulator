@@ -1,0 +1,16 @@
+# Copyright (C) 2017 David 'Mokon' Bond, All Rights Reserved
+
+# num_simulations, general_roll, risk_europe, risk, verbose, stats,
+# attacker: peasent, archer, infantry, cavalry, pikemen, siege,
+# defender: peasent, archer, infantry, cavalry, pikemen, siege,
+# draws, attacker wins, defense wins, avg_rounds
+
+1000, "true", "false", "true", "false", "false"
+1,    0,      0,       0,      0,       0
+0,    0,      0,       0,      0,       0
+0,    1000,   0,       1.00
+
+1000, "true", "false", "true", "false", "false"
+0,    0,      0,       0,      0,       0
+0,    1,      0,       0,      0,       0
+0,    0,      1000,    1.00
